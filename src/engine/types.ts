@@ -142,6 +142,8 @@ export interface Settings {
   speechOn: boolean;
   speechRate: number;
   motion: 'system' | 'reduced' | 'full';
+  /** Salted hash of the grown-ups PIN, or null when no PIN is set. */
+  parentPinHash: string | null;
 }
 
 export interface MasteryConfig {

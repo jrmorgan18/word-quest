@@ -70,3 +70,56 @@ test('parent gate, unlock a week, and skip the waiting period', async ({ page })
   await page.goto('/#/map');
   await expect(page.getByTestId('map-week-6')).toHaveAttribute('data-state', 'open');
 });
+
+test('grown-ups PIN: set, require, pause after wrong guesses, and reset via forgot-PIN', async ({ page }) => {
+  await launch(page);
+  const solveMath = async () => {
+    const label = await page.getByTestId('gate-label').textContent();
+    const [, a, b] = label!.match(/(\d+) × (\d+)/)!;
+    expect(Number(a)).toBeGreaterThan(9); // no longer single-digit
+    await page.getByTestId('gate-answer').fill(String(Number(a) * Number(b)));
+    await page.getByTestId('gate-submit').click();
+  };
+
+  // Without a PIN: harder math question, and a reminder to set a PIN.
+  await page.goto('/#/parent');
+  await solveMath();
+  await expect(page.getByTestId('pin-reminder')).toBeVisible();
+
+  // Set a PIN.
+  await page.getByTestId('tab-settings').click();
+  await page.getByTestId('pin-new').fill('482915');
+  await page.getByTestId('pin-repeat').fill('482916');
+  await page.getByTestId('pin-save').click();
+  await expect(page.getByTestId('pin-msg')).toContainText('don’t match');
+  await page.getByTestId('pin-repeat').fill('482915');
+  await page.getByTestId('pin-save').click();
+  await expect(page.getByTestId('pin-msg')).toContainText('PIN saved');
+
+  // After reload the gate asks for the PIN; three wrong tries cause a pause.
+  await page.waitForTimeout(600);
+  await page.reload();
+  await expect(page.getByTestId('gate-label')).toHaveText('Enter the grown-ups PIN');
+  for (const guess of ['1111', '2222', '3333']) {
+    await page.getByTestId('gate-answer').fill(guess);
+    await page.getByTestId('gate-submit').click();
+  }
+  await expect(page.getByTestId('gate-error')).toContainText('wait 30 seconds');
+  await expect(page.getByTestId('gate-answer')).toBeDisabled();
+
+  // The correct PIN works once the pause ends.
+  await page.clock.setFixedTime(new Date(Date.now() + 31_000));
+  await page.reload();
+  await page.getByTestId('gate-answer').fill('482915');
+  await page.getByTestId('gate-submit').click();
+  await expect(page.getByText('Grown-ups Dashboard')).toBeVisible();
+  await expect(page.getByTestId('pin-reminder')).toHaveCount(0);
+
+  // Forgot PIN: the harder reset problem removes the PIN.
+  await page.reload();
+  await page.getByTestId('forgot-pin').click();
+  const label = await page.getByTestId('gate-label').textContent();
+  expect(Number(label!.match(/(\d+) ×/)![1])).toBeGreaterThan(99);
+  await solveMath();
+  await expect(page.getByTestId('pin-reminder')).toBeVisible();
+});

@@ -17,4 +17,5 @@ export const DEFAULT_SETTINGS: Settings = {
   speechOn: true,
   speechRate: 0.9,
   motion: 'system',
+  parentPinHash: null,
 };

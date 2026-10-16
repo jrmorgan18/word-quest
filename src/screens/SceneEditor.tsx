@@ -103,24 +103,33 @@ export function SceneEditor({ sceneId }: { sceneId: SceneId }) {
   };
 
   // ── Dragging placed stickers ──
+  // The ref is the source of truth during a drag: pointer events can arrive faster than React
+  // re-renders on a busy tablet, so reading state here could drop the sticker short of the finger.
+  const dragRef = useRef<typeof drag>(null);
+  const updateDrag = (d: typeof drag) => {
+    dragRef.current = d;
+    setDrag(d);
+  };
   const onStickerDown = (e: RPointerEvent<SVGGElement>, p: StickerPlacement) => {
     e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     const f = toFraction(e.clientX, e.clientY);
     setSelected(p.id);
     setTrayPick(null);
-    setDrag({ id: p.id, x: p.x, y: p.y, dx: f.x - p.x, dy: f.y - p.y, moved: false });
+    updateDrag({ id: p.id, x: p.x, y: p.y, dx: f.x - p.x, dy: f.y - p.y, moved: false });
   };
   const onCanvasMove = (e: RPointerEvent) => {
-    if (!drag) return;
+    const cur = dragRef.current;
+    if (!cur) return;
     const f = toFraction(e.clientX, e.clientY);
-    const x = Math.min(1, Math.max(0, f.x - drag.dx));
-    const y = Math.min(1, Math.max(0, f.y - drag.dy));
-    setDrag({ ...drag, x, y, moved: drag.moved || Math.abs(x - drag.x) + Math.abs(y - drag.y) > 0.002 });
+    const x = Math.min(1, Math.max(0, f.x - cur.dx));
+    const y = Math.min(1, Math.max(0, f.y - cur.dy));
+    updateDrag({ ...cur, x, y, moved: cur.moved || Math.abs(x - cur.x) + Math.abs(y - cur.y) > 0.002 });
   };
   const onCanvasUp = () => {
-    if (drag?.moved) act((d, t) => moveSticker(d, sceneId, drag.id, drag.x, drag.y, t));
-    setDrag(null);
+    const cur = dragRef.current;
+    if (cur?.moved) act((d, t) => moveSticker(d, sceneId, cur.id, cur.x, cur.y, t));
+    updateDrag(null);
   };
   const onCanvasDown = (e: RPointerEvent) => {
     if (trayPick) {

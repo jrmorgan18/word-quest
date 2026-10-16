@@ -45,7 +45,11 @@ Sessions are designed to be short. After about 4 activities or a quiz, Home sugg
 
 ## Grown-ups dashboard
 
-Tap **🔒 Grown-ups** and answer a multiplication question. This is a simple gate to keep little fingers out, **not** security.
+Tap **🔒 Grown-ups**. This is a family gate to keep little fingers out, **not** security.
+
+- **Set a PIN** (Settings → Grown-ups PIN, 4–8 digits). Once set, the gate asks for it, and 3 wrong tries pause entry for 30 seconds. The PIN is saved as a salted hash, not plain digits.
+- **No PIN yet:** the gate asks a two-digit × two-digit multiplication question, and the dashboard reminds you to set a PIN.
+- **Forgot the PIN?** The gate's link asks a three-digit × two-digit problem that removes the PIN. Progress is never affected.
 
 - **Overview**: current week, words due for review, words needing attention, Memory Check timing, and storage status.
 - **Weeks & Words**: per-word status, practice done, struggle score, review date, and every quiz attempt with per-word scores. From here you can:

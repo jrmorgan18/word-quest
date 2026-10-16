@@ -9,6 +9,7 @@ import { dueReviewWordIds } from '../../engine/review';
 import { stickerCatalog } from '../../engine/rewards';
 import type { MasteryConfig } from '../../engine/types';
 import { now } from '../../lib/clock';
+import { hashPin, PIN_MAX, PIN_MIN, validPin } from '../../lib/pin';
 import { go, routes } from '../../lib/router';
 import { requestPersistentStorage } from '../../persistence/db';
 import { act, useAppState, useGame } from '../../store/game';
@@ -93,6 +94,12 @@ function Overview() {
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
+      {!s.settings.parentPinHash && (
+        <Card className="flex flex-col gap-2 border-4 border-sun md:col-span-2" data-testid="pin-reminder">
+          <h2 className="text-2xl font-semibold">🔑 Set a grown-ups PIN</h2>
+          <p className="text-lg">Without a PIN, this area is protected only by a math question — and some kids are very good at math! Set a PIN in Settings.</p>
+        </Card>
+      )}
       <Section title="At a glance">
         <ul className="flex flex-col gap-1 text-lg">
           <li>
@@ -195,6 +202,7 @@ function SettingsPanel() {
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
+      <PinSection />
       <Section title="Child & accessibility">
         <label className="flex items-center justify-between gap-3 text-lg">
           <span>Child’s name</span>
@@ -252,6 +260,55 @@ function SettingsPanel() {
         </div>
       </Section>
     </div>
+  );
+}
+
+function PinSection() {
+  const s = useAppState();
+  const hasPin = Boolean(s.settings.parentPinHash);
+  const [pin, setPin] = useState('');
+  const [again, setAgain] = useState('');
+  const [msg, setMsg] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const digits = (v: string) => v.replace(/\D/g, '').slice(0, PIN_MAX);
+  const save = () => {
+    if (!validPin(pin)) return setMsg(`Use ${PIN_MIN}–${PIN_MAX} digits.`);
+    if (pin !== again) return setMsg('The two PINs don’t match.');
+    act((d) => void (d.settings.parentPinHash = hashPin(pin)));
+    setPin('');
+    setAgain('');
+    setMsg('✅ PIN saved. You’ll need it to open this area.');
+  };
+  return (
+    <Section title="🔑 Grown-ups PIN">
+      <p>{hasPin ? 'A PIN is set. You can change or remove it here.' : 'No PIN yet — the gate uses a math question instead.'} Pick digits your child won’t guess (not a birthday or 1234).</p>
+      <div className="flex flex-wrap gap-3">
+        <input type="password" inputMode="numeric" autoComplete="new-password" placeholder={hasPin ? 'New PIN' : 'PIN'} aria-label="New PIN" data-testid="pin-new" value={pin} onChange={(e) => (setPin(digits(e.target.value)), setMsg(''))} className="min-h-12 w-36 rounded-xl border-2 border-ink/15 px-3 text-lg tracking-widest" />
+        <input type="password" inputMode="numeric" autoComplete="new-password" placeholder="Repeat PIN" aria-label="Repeat PIN" data-testid="pin-repeat" value={again} onChange={(e) => (setAgain(digits(e.target.value)), setMsg(''))} className="min-h-12 w-36 rounded-xl border-2 border-ink/15 px-3 text-lg tracking-widest" />
+        <Button onClick={save} disabled={!pin || !again} data-testid="pin-save">
+          {hasPin ? 'Change PIN' : 'Set PIN'}
+        </Button>
+        {hasPin && (
+          <Button variant="secondary" onClick={() => setConfirmRemove(true)}>
+            Remove PIN
+          </Button>
+        )}
+      </div>
+      {msg && <p className="font-semibold" data-testid="pin-msg">{msg}</p>}
+      <p className="text-sm text-ink-soft">Forgot it? The gate has a “Forgot the PIN?” link with a much harder math problem that removes the PIN. Progress is never affected.</p>
+      <ConfirmDialog
+        open={confirmRemove}
+        title="Remove the PIN?"
+        body="The gate will go back to a math question."
+        confirmLabel="Remove"
+        onCancel={() => setConfirmRemove(false)}
+        onConfirm={() => {
+          act((d) => void (d.settings.parentPinHash = null));
+          setConfirmRemove(false);
+          setMsg('PIN removed.');
+        }}
+      />
+    </Section>
   );
 }
 
