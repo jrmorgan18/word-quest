@@ -1,0 +1,72 @@
+import { expect, test } from '@playwright/test';
+import { launch } from './helpers';
+
+test('decorate a scene with tap-to-place and drag, then reload', async ({ page }) => {
+  await launch(page);
+  await page.getByTestId('world-dino').click();
+  const canvas = page.getByTestId('scene-canvas');
+  await expect(canvas).toBeVisible();
+
+  // Tap a sticker in the tray, then tap the scene.
+  await page.getByTestId('tray-stk-peculiar').tap();
+  const box = (await canvas.boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width * 0.3, box.y + box.height * 0.6);
+  await expect(page.getByTestId('placed-sticker')).toHaveCount(1);
+
+  // Accessible alternative: select and put it in the middle.
+  await page.getByTestId('tray-stk-astonished').tap();
+  await page.getByTestId('place-center').click();
+  await expect(page.getByTestId('placed-sticker')).toHaveCount(2);
+
+  // Resize and send backward via the toolbar.
+  await page.getByTestId('tool-bigger').click();
+  await page.getByTestId('tool-back').click();
+
+  // Drag the first sticker to a new spot.
+  const first = page.locator('[data-sticker="stk-peculiar"]');
+  const fb = (await first.boundingBox())!;
+  await page.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.3, { steps: 8 });
+  await page.mouse.up();
+  const moved = (await first.boundingBox())!;
+  // The sticker's center follows the finger to ~80% across the scene.
+  expect(moved.x + moved.width / 2).toBeGreaterThan(box.x + box.width * 0.75);
+  expect(moved.x + moved.width / 2).toBeLessThan(box.x + box.width * 0.85);
+
+  // The page itself must not have scrolled during the drag.
+  expect(await page.evaluate(() => window.scrollX)).toBe(0);
+
+  await page.waitForTimeout(600); // allow debounced save
+  await page.reload();
+  await expect(page.getByTestId('placed-sticker')).toHaveCount(2);
+  const afterReload = (await page.locator('[data-sticker="stk-peculiar"]').boundingBox())!;
+  expect(Math.abs(afterReload.x + afterReload.width / 2 - (moved.x + moved.width / 2))).toBeLessThan(4);
+
+  // Removing a sticker keeps it in the collection.
+  await page.locator('[data-sticker="stk-astonished"]').click();
+  await page.getByTestId('tool-remove').click();
+  await expect(page.getByTestId('placed-sticker')).toHaveCount(1);
+  await expect(page.getByTestId('tray-stk-astonished')).toBeVisible();
+
+  // Reset requires confirmation.
+  await page.getByTestId('reset-scene').click();
+  await page.getByRole('button', { name: 'Clear it' }).click();
+  await expect(page.getByTestId('placed-sticker')).toHaveCount(0);
+});
+
+test('parent gate, unlock a week, and skip the waiting period', async ({ page }) => {
+  await launch(page);
+  await page.goto('/#/parent');
+  const label = await page.locator('label[for="gate-answer"]').textContent();
+  const [, a, b] = label!.match(/(\d+) × (\d+)/)!;
+  await page.getByTestId('gate-answer').fill(String(Number(a) * Number(b)));
+  await page.getByTestId('gate-submit').click();
+  await expect(page.getByText('Grown-ups Dashboard')).toBeVisible();
+
+  await page.getByTestId('tab-weeks').click();
+  await page.getByTestId('expand-week-6').click();
+  await page.getByTestId('unlock-week-6').click();
+  await page.goto('/#/map');
+  await expect(page.getByTestId('map-week-6')).toHaveAttribute('data-state', 'open');
+});

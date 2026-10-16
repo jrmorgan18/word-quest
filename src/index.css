@@ -1,0 +1,142 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Fredoka Variable', 'Fredoka', ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-body: 'Nunito Variable', 'Nunito', ui-rounded, system-ui, sans-serif;
+
+  --color-ink: #2b2340;
+  --color-ink-soft: #5c5470;
+  --color-cream: #fff8e7;
+  --color-paper: #ffffff;
+  --color-grape: #5b3cc4;
+  --color-grape-dark: #432a99;
+  --color-grape-light: #ece6ff;
+  --color-dino: #23935e;
+  --color-dino-dark: #18734a;
+  --color-dino-light: #dcf6e6;
+  --color-space: #4b3fc7;
+  --color-space-dark: #33299a;
+  --color-space-light: #e4e2ff;
+  --color-arcade: #d93a41;
+  --color-arcade-dark: #ad2a30;
+  --color-arcade-light: #ffe3e3;
+  --color-sun: #ffc531;
+  --color-sun-light: #fff3c4;
+  --color-good: #1d8f4e;
+  --color-good-light: #dff7e8;
+  --color-oops: #c4621c;
+  --color-oops-light: #fff0e0;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    margin: 0;
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.45;
+    overscroll-behavior-y: none;
+  }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+  }
+  button {
+    font-family: var(--font-display);
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  :focus-visible {
+    outline: 4px solid #ffb300;
+    outline-offset: 3px;
+    border-radius: 12px;
+  }
+  input,
+  textarea,
+  select {
+    font-family: var(--font-body);
+    font-size: 18px;
+  }
+}
+
+/* Soft dotted backdrop so the cream background doesn't feel flat. */
+.paper-bg {
+  background-color: var(--color-cream);
+  background-image: radial-gradient(rgba(91, 60, 196, 0.07) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+.btn-3d {
+  box-shadow: 0 5px 0 var(--btn-shadow, rgba(43, 35, 64, 0.25));
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.btn-3d:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--btn-shadow, rgba(43, 35, 64, 0.25));
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@keyframes wq-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+.animate-gentle-pulse {
+  animation: wq-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes wq-confetti {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--dx, 0), 105vh, 0) rotate(720deg);
+    opacity: 0.9;
+  }
+}
+
+/* Reduced motion: system setting, or parent "calm mode". */
+@media (prefers-reduced-motion: reduce) {
+  html:not(.motion-full) *,
+  html:not(.motion-full) *::before,
+  html:not(.motion-full) *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+html.motion-reduced *,
+html.motion-reduced *::before,
+html.motion-reduced *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
