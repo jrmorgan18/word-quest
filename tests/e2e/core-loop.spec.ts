@@ -63,11 +63,11 @@ test('discover → practice → quiz → reload → delayed check → Week 4 unl
   await expect(page.getByTestId('map-week-4')).toHaveAttribute('data-state', 'current');
   await page.goto('/#/');
   await expect(page.locator('#current-adventure')).toHaveText('Volcano Valley');
-  await expect(page.getByTestId('weeks-conquered')).toHaveText('3 / 10');
+  await expect(page.getByTestId('weeks-conquered')).toHaveText('3 / 20');
 
   // A reload keeps everything.
   await page.reload();
-  await expect(page.getByTestId('weeks-conquered')).toHaveText('3 / 10');
+  await expect(page.getByTestId('weeks-conquered')).toHaveText('3 / 20');
 });
 
 test('missed quiz gives supportive feedback, a refresher, and a new variation', async ({ page }) => {
@@ -91,7 +91,7 @@ test('missed quiz gives supportive feedback, a refresher, and a new variation', 
   await expect(page.getByTestId('round-complete')).toBeVisible();
   // Stickers were not taken away and nothing was awarded.
   await page.goto('/#/');
-  await expect(page.getByTestId('sticker-count')).toHaveText('8 / 43');
+  await expect(page.getByTestId('sticker-count')).toHaveText('8 / 103');
 });
 
 test('word connections round can be completed with taps', async ({ page }) => {

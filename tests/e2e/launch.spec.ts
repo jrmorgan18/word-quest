@@ -3,9 +3,9 @@ import { launch } from './helpers';
 
 test('first launch shows historical progress and Week 3 as the current adventure', async ({ page }) => {
   await launch(page);
-  await expect(page.getByTestId('weeks-conquered')).toHaveText('2 / 10');
-  await expect(page.getByTestId('words-learned')).toHaveText('6 / 30');
-  await expect(page.getByTestId('sticker-count')).toHaveText('8 / 43');
+  await expect(page.getByTestId('weeks-conquered')).toHaveText('2 / 20');
+  await expect(page.getByTestId('words-learned')).toHaveText('6 / 80');
+  await expect(page.getByTestId('sticker-count')).toHaveText('8 / 103');
   await expect(page.locator('#current-adventure')).toHaveText('Pixel Power-Up');
   for (const w of ['Anticipate', 'Persistent', 'Consequence']) await expect(page.getByRole('button', { name: new RegExp(w) }).first()).toBeVisible();
 

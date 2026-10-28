@@ -5,9 +5,9 @@ import { freshState, T0, DAY } from './helpers';
 describe('initial state', () => {
   const s = freshState();
 
-  it('initializes progress for all 30 words', () => {
-    expect(Object.keys(s.wordProgress)).toHaveLength(30);
-    expect(Object.keys(s.weekProgress)).toHaveLength(10);
+  it('initializes progress for all 80 words', () => {
+    expect(Object.keys(s.wordProgress)).toHaveLength(80);
+    expect(Object.keys(s.weekProgress)).toHaveLength(20);
   });
 
   it('marks weeks 1 and 2 as historically completed, parent-confirmed, with no fabricated data', () => {

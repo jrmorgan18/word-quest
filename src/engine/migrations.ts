@@ -98,6 +98,7 @@ export function mergeBundledCurriculum(state: AppState, bundled: Curriculum = bu
     }
     state.wordProgress[id] ??= emptyWordProgress(id);
   }
+  makeRoomForBundledWeeks(state, bundled);
   for (const week of bundled.weeks) {
     const existing = saved.weeks.find((w) => w.id === week.id);
     if (!existing) {
@@ -110,8 +111,56 @@ export function mergeBundledCurriculum(state: AppState, bundled: Curriculum = bu
       existing.tagline = week.tagline;
     }
   }
+  // A new bundled week opens right away if the child already mastered the week before it.
+  const sorted = [...saved.weeks].sort((a, b) => a.number - b.number);
+  for (const id of summary.weeksAdded) {
+    const i = sorted.findIndex((w) => w.id === id);
+    const prev = sorted[i - 1];
+    const wp = state.weekProgress[id];
+    if (prev && state.weekProgress[prev.id]?.mastered && !wp.unlocked) {
+      wp.unlocked = true;
+      wp.unlockSource = 'progression';
+    }
+  }
   saved.version = bundled.version;
   return summary;
+}
+
+/**
+ * Parent-added weeks were numbered after the last bundled week, so new bundled weeks can collide
+ * with them (same id like "week-11", or same number). Such weeks move after the bundled ones, and
+ * their progress, quiz history and reward sticker move with them. Mutates.
+ */
+function makeRoomForBundledWeeks(state: AppState, bundled: Curriculum): void {
+  const saved = state.curriculum;
+  const bundledIds = new Set(bundled.weeks.map((w) => w.id));
+  const bundledMax = Math.max(0, ...bundled.weeks.map((w) => w.number));
+  const movers = saved.weeks.filter((w) => w.custom && (bundledIds.has(w.id) || w.number <= bundledMax)).sort((a, b) => a.number - b.number);
+  if (!movers.length) return;
+  let next = Math.max(bundledMax, ...saved.weeks.filter((w) => !movers.includes(w)).map((w) => w.number)) + 1;
+  for (const week of movers) {
+    if (bundledIds.has(week.id)) {
+      const oldId = week.id;
+      let newId = `custom-${oldId}`;
+      while (saved.weeks.some((w) => w.id === newId) || bundledIds.has(newId)) newId = `${newId}-x`;
+      const wp = state.weekProgress[oldId];
+      delete state.weekProgress[oldId];
+      state.weekProgress[newId] = { ...(wp ?? emptyWeekProgress(newId)), weekId: newId };
+      for (const a of state.quizAttempts) if (a.weekId === oldId) a.weekId = newId;
+      for (const a of Object.values(state.achievements)) if (a.weekId === oldId) a.weekId = newId;
+      const oldSticker = week.rewardStickerId;
+      week.rewardStickerId = `stk-${newId}`;
+      if (state.stickers[oldSticker]) {
+        state.stickers[week.rewardStickerId] = state.stickers[oldSticker];
+        delete state.stickers[oldSticker];
+        for (const scene of Object.values(state.scenes)) {
+          for (const p of scene.placements) if (p.stickerId === oldSticker) p.stickerId = week.rewardStickerId;
+        }
+      }
+      week.id = newId;
+    }
+    week.number = next++;
+  }
 }
 
 export { CURRICULUM_VERSION };

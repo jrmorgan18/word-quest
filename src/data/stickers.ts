@@ -12,6 +12,16 @@ const WEEK_STICKERS: Omit<StickerDef, 'kind' | 'baseScale'>[] = [
   { id: 'stk-week-8', name: 'Orbit Station', description: 'Space Station conquered!', sourceId: 'week-8' },
   { id: 'stk-week-9', name: 'Crystal Cluster', description: 'Treasure Caverns conquered!', sourceId: 'week-9' },
   { id: 'stk-week-10', name: 'Champion Trophy', description: 'Ultimate Word Quest conquered!', sourceId: 'week-10' },
+  { id: 'stk-week-11', name: 'Speedy Comet', description: 'Comet Chase conquered!', sourceId: 'week-11' },
+  { id: 'stk-week-12', name: 'Boss Crown', description: 'Boss Battle Arena conquered!', sourceId: 'week-12' },
+  { id: 'stk-week-13', name: 'Amber Treasure', description: 'Dino Migration conquered!', sourceId: 'week-13' },
+  { id: 'stk-week-14', name: 'Star Compass', description: 'Deep Space Voyage conquered!', sourceId: 'week-14' },
+  { id: 'stk-week-15', name: 'Hero Shield', description: 'Hall of Heroes conquered!', sourceId: 'week-15' },
+  { id: 'stk-week-16', name: 'Lava Crystal', description: 'Lava Lands conquered!', sourceId: 'week-16' },
+  { id: 'stk-week-17', name: 'Mission Badge', description: 'Mission Control conquered!', sourceId: 'week-17' },
+  { id: 'stk-week-18', name: 'Friendship Castle', description: 'Friendship Fortress conquered!', sourceId: 'week-18' },
+  { id: 'stk-week-19', name: 'Canyon Flag', description: 'Canyon Climb conquered!', sourceId: 'week-19' },
+  { id: 'stk-week-20', name: 'Galaxy Legend Crown', description: 'Legends of the Galaxy conquered!', sourceId: 'week-20' },
 ];
 
 export const ACHIEVEMENT_STICKERS: StickerDef[] = [

@@ -1,6 +1,6 @@
 # Word Quest — Brooks's Vocabulary Adventure
 
-A tablet-friendly vocabulary game for a strong first-grade reader. Brooks explores three new words each week through six activity types, takes a weekly quiz and a next-day Memory Check, earns original stickers, and decorates Dinosaur Island, Space Explorer, and Pixel Arcade scenes.
+A tablet-friendly vocabulary game for a strong first-grade reader. Brooks explores new words each week (three per week in Weeks 1–10, five per week in Weeks 11–20) through six activity types, takes a weekly quiz and a next-day Memory Check, earns original stickers, and decorates Dinosaur Island, Space Explorer, and Pixel Arcade scenes.
 
 The app is a static web app/PWA. There's no backend, no accounts, no ads, and no external AI or paid services.
 
@@ -9,9 +9,9 @@ The app is a static web app/PWA. There's no backend, no accounts, no ads, and no
 ```bash
 npm install
 npm run dev          # http://localhost:5173 (add --host to open it from a tablet on your Wi-Fi)
-npm test             # 72 unit tests (Vitest)
+npm test             # 142 unit tests (Vitest)
 npx playwright install chromium webkit   # one-time
-npm run test:e2e     # 14 browser tests: Android tablet (Chromium) + iPad (WebKit)
+npm run test:e2e     # 16 browser tests: Android tablet (Chromium) + iPad (WebKit)
 npm run build        # static site in dist/
 npm run preview      # serve dist/ locally
 ```
@@ -28,11 +28,12 @@ HTTPS is required for offline/PWA install (localhost is exempt).
 
 1. **Discover**: each word has a discovery card with a mystery clue, a meaning reveal, a second example in a different setting, a thinking question about the illustration, a word family, and a discussion prompt.
 2. **Practice**: Choose the Meaning, Complete the Story, Word Detective (meaning from context, correct usage, what a character meant), Word Connections (synonym matching, "persistent vs. stubborn" nuance sorting, same/opposite sorting, word families), and Creative Challenge (self-confirmed, never graded).
-3. **Weekly quiz** unlocks after all 3 words are discovered and each word has 2 *different* practice games (Creative is a bonus and doesn't count).
+3. **Weekly quiz** unlocks after all of the week’s words are discovered and each word has 2 *different* practice games (Creative is a bonus and doesn't count).
    - 9 questions, 3 per word, mixed formats, at least one application question per word.
    - Answer positions are randomized.
-   - Pass: ≥8/9 and ≥2/3 per word. This awards the 3 word stickers and a weekly achievement.
-4. **Memory Check** opens 20 hours later: 6 new questions, 2 per word. Pass: ≥5/6 and ≥1 per word. This masters the week, awards the giant week sticker, and unlocks the next week.
+   - Pass: ≥8/9 and ≥2/3 per word. This awards the word stickers and a weekly achievement.
+   - Five-word weeks (11–20) get 15 questions and pass at ≥14/15, still with ≥2/3 per word (one miss allowed, same as 8/9).
+4. **Memory Check** opens 20 hours later: 6 new questions, 2 per word. Pass: ≥5/6 and ≥1 per word. Five-word weeks get 10 questions and pass at ≥9/10. This masters the week, awards the giant week sticker, and unlocks the next week.
 5. **Missed quiz**: supportive feedback per word, a targeted Quick Refresher for only the missed words, and a fresh question variation next time. Nothing is ever taken away.
 6. **Spaced review (Memory Mission)**: mastered words come back after 1 → 3 → 7 → 14 → 30 days.
    - A miss shows a refresher, steps the word back, and makes it due tomorrow.
@@ -72,6 +73,8 @@ Tap **🔒 Grown-ups**. This is a family gate to keep little fingers out, **not*
 - Safari can evict data for websites that haven't been used for a while. Installing to the Home Screen avoids this, and the dashboard can request persistent storage. Exporting a backup occasionally is still wise.
 - **Schema migrations** (`src/engine/migrations.ts`): saved documents carry `schemaVersion` and are upgraded step by step on load or import, then normalized.
 - **Curriculum migrations**: when `CURRICULUM_VERSION` is bumped, new words and weeks are merged in and unedited words are refreshed. Parent-edited words, week word lists, and all progress are preserved.
+  - Version 2 added Weeks 11–20. On an existing device, Week 11 opens automatically if Week 10 is already mastered.
+  - A parent-added week that used the same number (e.g. a custom "Week 11") moves to after Week 20, along with its words, progress and sticker.
 
 ## Historical progress (Weeks 1–2)
 
@@ -85,13 +88,13 @@ On first launch, Weeks 1 and 2 are marked complete with source **parent-confirme
 ## Project structure
 
 ```
-src/data/          Curriculum as typed data: 30 fully authored words, 10 weeks, sticker catalog
+src/data/          Curriculum as typed data: 80 fully authored words, 20 weeks, sticker catalog
 src/engine/        Pure game logic (no React): progress, question generators, quiz building and
                    grading, review scheduling, rewards, scenes, parent overrides, migrations, backups
 src/engine/__tests__/  Unit tests
 src/persistence/   IndexedDB storage
 src/store/         Zustand store; every change runs an engine function on an Immer draft, then saves
-src/art/           Original SVG art: character primitives, 43 stickers, 3 scene backgrounds
+src/art/           Original SVG art: character primitives, 103 stickers, 3 scene backgrounds
 src/components/    UI kit, QuestionRunner (shared by practice/quiz/review), celebrations
 src/screens/       Home, Map, Week, Discovery, activities, Quiz, Memory Mission, Sticker Book,
                    Scene editor, parent dashboard

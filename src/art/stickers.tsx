@@ -5,6 +5,8 @@
  */
 import { useId, type ReactNode } from 'react';
 import { Alien, Astronaut, Coin, Dino, Eye, Gem, Heart, INK, Robot, Sparkle, Star } from './primitives';
+import { ART_11_15 } from './stickers11-15';
+import { ART_16_20 } from './stickers16-20';
 
 type Art = (u: string) => ReactNode;
 
@@ -669,6 +671,8 @@ const ART: Record<string, Art> = {
       <path d="M72 70 Q78 56 92 54" stroke="#fff" strokeWidth={7} fill="none" strokeLinecap="round" />
     </g>
   ),
+  ...ART_11_15,
+  ...ART_16_20,
 };
 
 /** Generic art for parent-added words: a colorful star badge with the word's first letter. */

@@ -191,3 +191,69 @@ describe('grading and mastery', () => {
     expect(nextStep(s, findWeek(s, 'week-3')!, T0 + DAY)).toEqual({ kind: 'quiz', quizType: 'delayed' });
   });
 });
+
+describe('five-word weeks (11-20)', () => {
+  const fiveWordWeeks = freshState().curriculum.weeks.filter((w) => w.number >= 11).map((w) => w.id);
+
+  it.each(fiveWordWeeks)('%s: 15-question quiz, 3 per word, varied formats, valid answers', (weekId) => {
+    const s = freshState();
+    practiceWeek(s, weekId);
+    const week = findWeek(s, weekId)!;
+    expect(week.wordIds).toHaveLength(5);
+    for (let seed = 1; seed <= 10; seed++) {
+      const quiz = buildQuiz(s, week, 'initial', T0, seed);
+      expect(quiz.questions).toHaveLength(15);
+      for (const id of week.wordIds) {
+        const qs = quiz.questions.filter((q) => q.wordId === id);
+        expect(qs).toHaveLength(3);
+        expect(qs.some((q) => q.format === 'application' || q.format === 'situation')).toBe(true);
+        expect(new Set(qs.map((q) => q.format)).size).toBe(3);
+      }
+      expect(new Set(quiz.questions.map((q) => q.key)).size).toBe(15);
+      quiz.questions.forEach(assertValid);
+    }
+    for (const a of ['choose', 'story', 'detective'] as const) {
+      const round = buildQuestionRound(s, week, a, 1);
+      expect(round).toHaveLength(5);
+      round.forEach(assertValid);
+    }
+    const conn = buildConnections(s, week, 1);
+    expect(conn.wordIds).toHaveLength(5);
+    expect(conn.steps.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('allows one miss on the 15-question quiz and on the 10-question Memory Check', () => {
+    const s = freshState();
+    practiceWeek(s, 'week-11');
+    const week = findWeek(s, 'week-11')!;
+    const quiz = buildQuiz(s, week, 'initial', T0, 5);
+    const right = quiz.questions.map((q) => q.answerIndex);
+    const miss = (base: number[], idxs: number[], qs: Question[]) => base.map((a, i) => (idxs.includes(i) ? (a + 1) % qs[i].options.length : a));
+    expect(gradeQuiz(s, quiz, miss(right, [0], quiz.questions)).passed).toBe(true);
+    expect(gradeQuiz(s, quiz, miss(right, [0, 1], quiz.questions)).passed).toBe(false);
+
+    const initial = applyQuizResult(s, quiz, right, T0);
+    const later = T0 + 21 * HOUR;
+    const dq = buildQuiz(s, week, 'delayed', later, 6);
+    expect(dq.questions).toHaveLength(10);
+    for (const id of week.wordIds) expect(dq.questions.filter((q) => q.wordId === id)).toHaveLength(2);
+    const initialKeys = new Set(initial.questions.map((q) => q.key));
+    expect(dq.questions.filter((q) => initialKeys.has(q.key))).toHaveLength(0);
+    const dRight = dq.questions.map((q) => q.answerIndex);
+    expect(gradeQuiz(s, dq, miss(dRight, [0], dq.questions)).passed).toBe(true);
+    expect(gradeQuiz(s, dq, miss(dRight, [0, 1], dq.questions)).passed).toBe(false);
+
+    applyQuizResult(s, dq, dRight, later);
+    expect(s.weekProgress['week-11'].mastered).toBe(true);
+    expect(s.weekProgress['week-12'].unlocked).toBe(true);
+    expect(s.stickers['stk-week-11']?.source).toBe('earned');
+  });
+
+  it('mastering Week 10 opens Week 11', () => {
+    const s = freshState();
+    practiceWeek(s, 'week-10');
+    passQuiz(s, 'week-10', 'initial', T0);
+    passQuiz(s, 'week-10', 'delayed', T0 + 21 * HOUR);
+    expect(s.weekProgress['week-11'].unlocked).toBe(true);
+  });
+});

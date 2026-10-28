@@ -2,18 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { bundledCurriculum } from '../../data/curriculum';
 import { buildStickerCatalog } from '../../data/stickers';
 import { countMarks } from '../../lib/text';
+import { hasArt } from '../../art/stickers';
 
 const c = bundledCurriculum();
 const words = Object.values(c.words);
 
 describe('bundled curriculum', () => {
-  it('has 10 weeks with 3 words each, 30 words total', () => {
-    expect(c.weeks).toHaveLength(10);
-    expect(words).toHaveLength(30);
-    for (const w of c.weeks) expect(w.wordIds).toHaveLength(3);
+  it('has 20 weeks: 3 words each in weeks 1-10, 5 words each in weeks 11-20 (80 words)', () => {
+    expect(c.weeks).toHaveLength(20);
+    expect(words).toHaveLength(80);
+    for (const w of c.weeks) expect(w.wordIds, w.id).toHaveLength(w.number <= 10 ? 3 : 5);
     const all = c.weeks.flatMap((w) => w.wordIds);
-    expect(new Set(all).size).toBe(30);
+    expect(new Set(all).size).toBe(80);
     for (const id of all) expect(c.words[id]).toBeDefined();
+    for (const w of c.weeks) for (const id of w.wordIds) expect(c.words[id].week, id).toBe(w.number);
+  });
+
+  it('gives every word and week its own sticker artwork', () => {
+    for (const w of words) expect(hasArt(w.stickerId), w.stickerId).toBe(true);
+    for (const w of c.weeks) expect(hasArt(w.rewardStickerId), w.rewardStickerId).toBe(true);
   });
 
   it('seeds the required words in weeks 1-3', () => {
@@ -81,8 +88,8 @@ describe('bundled curriculum', () => {
 
   it('builds a sticker catalog with a unique sticker per word and week', () => {
     const cat = buildStickerCatalog(c);
-    expect(cat.filter((s) => s.kind === 'word')).toHaveLength(30);
-    expect(cat.filter((s) => s.kind === 'week')).toHaveLength(10);
+    expect(cat.filter((s) => s.kind === 'word')).toHaveLength(80);
+    expect(cat.filter((s) => s.kind === 'week')).toHaveLength(20);
     expect(new Set(cat.map((s) => s.id)).size).toBe(cat.length);
   });
 });

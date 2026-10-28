@@ -90,7 +90,7 @@ describe('curriculum management', () => {
   it('adds a week and a sparse custom word that can still be practiced and quizzed', () => {
     const s = freshState();
     const weekId = parentAddWeek(s, 'Dragon Mountain', 'dino');
-    expect(findWeek(s, weekId)?.number).toBe(11);
+    expect(findWeek(s, weekId)?.number).toBe(21);
     expect(s.weekProgress[weekId].unlocked).toBe(false);
     for (const [text, def] of [
       ['Brave', 'Ready to face danger or difficulty'],
